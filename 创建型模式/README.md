@@ -8,10 +8,6 @@
 
 提供一个创建一系列相关或相互依赖对象的接口，而无需制定他们具体的类。
 
-#### 别名
-
-Kit
-
 #### 动机
 
 创建一系列UI组件，不同的视感风格为诸如Button、Input、Dialog等组件定义了不同的外观和行为。一个应用不应该为一个特定的视感外观硬编码它的窗口组件。
@@ -31,7 +27,7 @@ Kit
 
 ![](https://i.loli.net/2019/01/25/5c4b1d532c73d.png)
 
-#### 优缺点
+#### 效果
 
 1. 一个工厂封装创建产品对象的责任和过程，它将用户与类的实现**分离**。（init并不知道A、B是怎么构造的）
 2. 可以轻松升级工厂的产品（A、B），只需改变具体的工厂即可实现不同的产品配置。（更改ConcreteFactoryxxxx）
@@ -123,5 +119,86 @@ init(normalTest)
 
 ```
 
+### 生成器（对象创建型）
 
+#### 目的
+
+将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示
+
+#### 动机
+
+考虑一个Rich Text Format文档交换格式的阅读器应该能将RTF格式转换为多种正文格式。因为可转换为的格式应该是无限的，所以需要很容易的增减可转换的格式而不用改变RTF阅读器。
+
+#### 适用场景
+
+1. 当创建复杂对象的算法应该独立于该对象的组成部分以及它们的装配方式时
+2. 当构造过程必须允许被构造的对象有不同的表示时
+
+#### 结构
+
+![](https://i.loli.net/2019/01/26/5c4bfa901d89a.png)
+
+#### 效果
+
+1. 可以改变一个产品的内部表示；Builder对象提供给导向器一个构造产品的抽象接口，该接口使得生成器可隐藏这个产品的表示和内部结构。产品是通过抽象接口构造的，在改变产品的内部表示时所要做的仅仅是定义一个新的生成器
+2. 构造代码和表示代码分离；客户不需要知道定义产品内部结构的类的所有信息，这些类是不会出现在Builder的接口中；每个ConcreteBuilder包含了创建和装配一个特定产品的所有代码；不同的导向器可以复用它以在相同部件集合的基础上构造不同的产品。
+3. 可对构造过程进行更加精细的控制（导向者的init函数一步一步build产品，在最后一步才将产品取回）；Builder接口相比其他创建型模式能更好地反映产品的构造过程。
+
+#### 实现
+
+```javascript
+ // 抽象Builder只定义接口，而具体的实现由其子类实现
+class Builder {
+  constructor() {}
+  BuildA() {}
+  BuildB() {}
+  BuildC() {}
+  GetApp() {}
+}
+
+// 具体的builder实现，这里为Super Builder；当然也可以为Normal Builder
+class SuperBuilder extends Builder {
+  constructor() {
+    super()
+  }
+  BuildA() {
+    this.A = 'SuperA'
+  }
+  BuildB() {
+    this.B = 'SuperB'
+  }
+  BuildC() {
+    this.C = 'SuperC'
+  }
+  log() {
+    console.log(`${this.A} ${this.B} ${this.C}`)
+  }
+  GetApp() {
+    console.log('建造完成')
+    return this
+  }
+}
+
+// 导向器
+function init(builder) {
+  builder.BuildA()
+  builder.BuildB()
+  builder.BuildC()
+  return builder.GetApp()
+}
+function initWithoutC(builder) {
+  builder.BuildA()
+  builder.BuildB()
+  return builder.GetApp()
+}
+
+// 测试
+let superBuildCase = new SuperBuilder()
+let superBuildCaseWithoutC = new SuperBuilder()
+let instance = init(superBuildCase)
+let instanceWithoutC = initWithoutC(superBuildCaseWithoutC)
+console.log(instance)
+console.log(instanceWithoutC)
+
+```
 
